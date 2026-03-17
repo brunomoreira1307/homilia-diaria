@@ -104,4 +104,4 @@ if st.button("Gerar Homilia de Hoje", type="primary"):
         st.write(resultado)
 
 st.divider()
-st.caption("Site: nellaparola.it | IA: Google Gemini API Autônoma")
+st.caption("Site: nellaparola.it | IA: Google Gemini API Autônoma | Bruno Moreira")
