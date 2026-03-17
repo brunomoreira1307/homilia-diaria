@@ -12,7 +12,7 @@ os.environ["GOOGLE_API_USE_MTLS"] = "never"
 # CONFIGURAÇÕES DE API
 # ==========================================
 if "MINHA_CHAVE" in st.secrets:
-    API_KEY = st.secrets["AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"]
+    API_KEY = st.secrets[MINHA_CHAVE = "AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"]
 else:
     API_KEY = "AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"
 
