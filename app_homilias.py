@@ -5,26 +5,24 @@ import google.generativeai as genai
 from datetime import date
 import os
 
-# Força o sistema a não usar conexões experimentais que causam erro 404
+# Força o uso da conexão estável
 os.environ["GOOGLE_API_USE_MTLS"] = "never"
 
 # ==========================================
-# CONFIGURAÇÕES DE API (SEGURANÇA)
+# CONFIGURAÇÕES DE API
 # ==========================================
 if "MINHA_CHAVE" in st.secrets:
-    API_KEY = st.secrets["MINHA_CHAVE"]
+    API_KEY = st.secrets["AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"]
 else:
-    # COLE SUA CHAVE AQUI PARA TESTAR NO PC:
     API_KEY = "AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"
 
 genai.configure(api_key=API_KEY)
 
 # ==========================================
-# FUNÇÕES DE EXTRAÇÃO
+# FUNÇÕES
 # ==========================================
 
 def extrair_texto_nellaparola():
-    """Busca a liturgia exata de hoje no site italiano"""
     hoje = date.today()
     data_formatada = hoje.strftime("%Y-%m-%d")
     url = f"https://www.nellaparola.it/ldg/{data_formatada}"
@@ -33,7 +31,7 @@ def extrair_texto_nellaparola():
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers)
         if response.status_code == 404:
-            return f"Erro: Liturgia de hoje ({data_formatada}) ainda não disponível."
+            return f"Liturgia de hoje ({data_formatada}) ainda não disponível no site."
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
         paragrafos = soup.find_all('p') 
@@ -43,42 +41,37 @@ def extrair_texto_nellaparola():
         return f"Erro na extração: {e}"
 
 def gerar_homilia(texto_base):
-    """Gera homilia com sistema de tentativa e erro para o modelo"""
     if "Erro" in texto_base or not texto_base:
         return texto_base
 
-    # Lista de nomes de modelos para tentar (ordem de estabilidade)
+    # Nomes estáveis para a versão v1 da API
     modelos_para_testar = ["gemini-1.5-flash", "gemini-1.5-pro"]
     
-    ultima_excecao = ""
-    
-    for nome_modelo in modelos_para_testar:
+    erro_final = ""
+    for nome in modelos_para_testar:
         try:
-            model = genai.GenerativeModel(nome_modelo)
-            
+            model = genai.GenerativeModel(nome)
             prompt = f"""
-            Você é um sacerdote católico experiente e zeloso. 
-            Baseado nestes estudos teológicos: {texto_base}
+            Você é um sacerdote católico zeloso. 
+            Estude estes comentários teológicos: {texto_base}
             
-            Escreva uma homilia original em português seguindo este MOLDE:
-            1. INTRODUÇÃO: Saudação e tema central.
-            2. DESENVOLVIMENTO: Reflexão profunda para a vida atual, sem citar fontes.
-            3. CONCLUSÃO: Convite à ação e prece breve.
+            Escreva uma homilia original em português seguindo este molde:
+            - INTRODUÇÃO: Saudação e tema central.
+            - DESENVOLVIMENTO: Reflexão profunda para hoje, sem citar fontes.
+            - CONCLUSÃO: Convite à ação e prece breve.
             
-            Regra: Não mencione sites ou autores. Use tom pastoral e gramática impecável.
+            Use tom pastoral e gramática correta. Jamais mencione o site de origem.
             """
-            
             resposta = model.generate_content(prompt)
             return resposta.text
-            
         except Exception as e:
-            ultima_excecao = str(e)
+            erro_final = str(e)
             continue
             
-    return f"Não foi possível conectar aos modelos do Gemini. Erro: {ultima_excecao}"
+    return f"Erro de conexão com a IA: {erro_final}"
 
 # ==========================================
-# INTERFACE STREAMLIT
+# INTERFACE
 # ==========================================
 st.set_page_config(page_title="Homilia Diária", page_icon="🕊️")
 
