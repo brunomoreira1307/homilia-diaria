@@ -60,11 +60,11 @@ def gerar_homilia(texto_base):
     Estude estes comentários teológicos: {texto_base}
     
     Escreva uma homilia original em português seguindo este molde:
-    - INTRODUÇÃO: Saudação e tema central.
-    - DESENVOLVIMENTO: Reflexão profunda para hoje, sem citar fontes.
+    - INTRODUÇÃO: Saudação e tema central, estritamente ligado ao tema do dia.
+    - DESENVOLVIMENTO: Reflexão profundamente teológica e eloquente para hoje, sem citar fontes.
     - CONCLUSÃO: Convite à ação e prece breve.
     
-    Use tom pastoral e gramática correta. Jamais mencione o site de origem.
+    Use tom pastoral, poético, simples, profundo e gramática correta. Jamais mencione o site de origem. Utilize todos os comentários presentes no site para a liturgia do dia. Quando utilizar os pronomes Ele, Seu(a), referindo-se a Deus ou a Jesus Cristo, faça-o em letras minúsculas. Exceto quando o nome de Deus ou de Jesus Cristo não forem citados no texto ou não estejam evidentes. Tabmbém evite usat travessões, prefira ponto ou vírgula.
     """
 
     headers = {'Content-Type': 'application/json'}
