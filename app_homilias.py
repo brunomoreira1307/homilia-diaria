@@ -8,8 +8,8 @@ from datetime import date
 # CONFIGURAÇÕES DA API
 # ==========================================
 # Insira sua API Key do Google AI Studio entre as aspas
-API_KEY = "AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"
-genai.configure(api_key=API_KEY)
+API_KEY = st.secrets["MINHA_CHAVE"]
+genai.configure(api_key=API_KEY, transport="rest")
 
 # ==========================================
 # FUNÇÕES DO APLICATIVO
@@ -46,7 +46,7 @@ def gerar_homilia(texto_base):
         return texto_base
 
     # RADAR DE MODELOS: Busca automaticamente o modelo correto liberado
-    modelo_escolhido = "gemini-1.5-pro"
+    modelo_escolhido = "gemini-pro"
     try:
         for m in genai.list_models():
             if 'generateContent' in m.supported_generation_methods:
