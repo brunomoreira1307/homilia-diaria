@@ -94,7 +94,7 @@ def gerar_homilia(texto_base):
 st.set_page_config(page_title="Homilia Diária", page_icon="🕊️")
 
 st.title("🕊️ Homilia Diária")
-st.write("Reflexão original baseada na liturgia do dia.")
+st.write("Reflexão para a liturgia do dia.")
 
 if st.button("Gerar Homilia de Hoje", type="primary"):
     with st.spinner("Meditando sobre as leituras e os comentários..."):
