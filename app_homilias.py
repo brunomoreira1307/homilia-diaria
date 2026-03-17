@@ -15,7 +15,7 @@ if "MINHA_CHAVE" in st.secrets:
     API_KEY = st.secrets["MINHA_CHAVE"]
 else:
     # COLE SUA CHAVE AQUI PARA TESTAR NO PC:
-    API_KEY = "COLOQUE_SUA_CHAVE_AQUI"
+    API_KEY = "AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"
 
 genai.configure(api_key=API_KEY)
 
