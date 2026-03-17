@@ -73,7 +73,7 @@ def gerar_homilia(texto_base):
     - DESENVOLVIMENTO: Reflexão profundamente teológica e eloquente para hoje, sem citar fontes.
     - CONCLUSÃO: Convite à ação e prece breve.
     
-    Use tom pastoral, poético, simples, profundo e gramática correta. Jamais mencione o site de origem. Utilize todos os comentários presentes no site para a liturgia do dia. Quando utilizar os pronomes Ele, Seu(a), referindo-se a Deus ou a Jesus Cristo, faça-o em letras minúsculas. Exceto quando o nome de Deus ou de Jesus Cristo não forem citados no texto ou não estejam evidentes. Tabmbém evite usat travessões, prefira ponto ou vírgula.
+    Use tom pastoral, poético, simples, profundo e gramática correta. Jamais mencione o site de origem. Utilize todos os comentários presentes no site para a liturgia do dia. Quando utilizar os pronomes Ele, Seu(a), referindo-se a Deus ou a Jesus Cristo, faça-o em letras minúsculas, exceto quando o nome de Deus ou de Jesus Cristo não forem citados no texto ou não estejam evidentes e, também, em início de frases, após ponto final. Evite usar travessões, substituindo por ponto, vírgula ou entre parênteses.
     """
 
     headers = {'Content-Type': 'application/json'}
