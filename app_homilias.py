@@ -59,7 +59,7 @@ def gerar_homilia(texto_base):
     Você é um sacerdote católico zeloso. 
     Estude estes comentários teológicos: {texto_base}
     
-    Escreva uma homilia original em português seguindo este molde:
+    Escreva uma homilia original em português seguindo este molde, a partir dos comentário de Roberto Pasolini, Luigi Maria Epicoco e MichaelDavide Semeraro:
     - INTRODUÇÃO: Saudação e tema central, estritamente ligado ao tema do dia.
     - DESENVOLVIMENTO: Reflexão profundamente teológica e eloquente para hoje, sem citar fontes.
     - CONCLUSÃO: Convite à ação e prece breve.
