@@ -1,91 +1,27 @@
 import streamlit as st
-import requests
-from bs4 import BeautifulSoup
 import google.generativeai as genai
-from datetime import date
-import os
 
-# Força o uso da conexão estável
-os.environ["GOOGLE_API_USE_MTLS"] = "never"
+st.title("🔎 Raio-X do Gemini")
 
-# ==========================================
-# CONFIGURAÇÕES DE API
-# ==========================================
+# Puxa a sua chave do cofre do Streamlit
 if "MINHA_CHAVE" in st.secrets:
-    API_KEY = st.secrets["MINHA_CHAVE"]
+    genai.configure(api_key=st.secrets["MINHA_CHAVE"])
+    st.success("✅ Chave de API lida com sucesso do painel Secrets!")
 else:
-    # Se estiver no seu PC, use a linha abaixo. 
-    # Se estiver no GitHub, pode deixar como está, 
-    # pois o "if" acima vai buscar no Secrets do Streamlit.
-    API_KEY = "AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"
+    st.error("❌ A chave não foi encontrada no painel Secrets.")
 
-genai.configure(api_key=API_KEY)
-# ==========================================
-# FUNÇÕES
-# ==========================================
+st.write("### Modelos que o Google liberou para esta chave:")
 
-def extrair_texto_nellaparola():
-    hoje = date.today()
-    data_formatada = hoje.strftime("%Y-%m-%d")
-    url = f"https://www.nellaparola.it/ldg/{data_formatada}"
-    
-    try:
-        headers = {'User-Agent': 'Mozilla/5.0'}
-        response = requests.get(url, headers=headers)
-        if response.status_code == 404:
-            return f"Liturgia de hoje ({data_formatada}) ainda não disponível no site."
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        paragrafos = soup.find_all('p') 
-        texto = "\n".join([p.get_text(strip=True) for p in paragrafos if len(p.get_text(strip=True)) > 20])
-        return f"DATA: {data_formatada}\n\n" + texto[:3500]
-    except Exception as e:
-        return f"Erro na extração: {e}"
-
-def gerar_homilia(texto_base):
-    if "Erro" in texto_base or not texto_base:
-        return texto_base
-
-    # Nomes estáveis para a versão v1 da API
-    modelos_para_testar = ["gemini-1.5-flash", "gemini-1.5-pro"]
-    
-    erro_final = ""
-    for nome in modelos_para_testar:
-        try:
-            model = genai.GenerativeModel(nome)
-            prompt = f"""
-            Você é um sacerdote católico zeloso. 
-            Estude estes comentários teológicos: {texto_base}
+try:
+    # Pergunta direto para o servidor do Google quais modelos existem para você
+    modelos_encontrados = False
+    for m in genai.list_models():
+        if 'generateContent' in m.supported_generation_methods:
+            st.code(m.name) # Imprime o nome exato na tela
+            modelos_encontrados = True
             
-            Escreva uma homilia original em português seguindo este molde:
-            - INTRODUÇÃO: Saudação e tema central.
-            - DESENVOLVIMENTO: Reflexão profunda para hoje, sem citar fontes.
-            - CONCLUSÃO: Convite à ação e prece breve.
-            
-            Use tom pastoral e gramática correta. Jamais mencione o site de origem.
-            """
-            resposta = model.generate_content(prompt)
-            return resposta.text
-        except Exception as e:
-            erro_final = str(e)
-            continue
-            
-    return f"Erro de conexão com a IA: {erro_final}"
+    if not modelos_encontrados:
+        st.warning("A chave conectou, mas o Google diz que não há modelos de texto liberados para ela.")
 
-# ==========================================
-# INTERFACE
-# ==========================================
-st.set_page_config(page_title="Homilia Diária", page_icon="🕊️")
-
-st.title("🕊️ Homilia Diária")
-st.write("Reflexão original baseada na liturgia do dia.")
-
-if st.button("Gerar Homilia de Hoje", type="primary"):
-    with st.spinner("Meditando sobre as leituras..."):
-        conteudo = extrair_texto_nellaparola()
-        resultado = gerar_homilia(conteudo)
-        st.subheader("Sua reflexão:")
-        st.write(resultado)
-
-st.divider()
-st.caption("Site: nellaparola.it | IA: Google Gemini")
+except Exception as e:
+    st.error(f"Erro ao tentar listar os modelos: {e}")
