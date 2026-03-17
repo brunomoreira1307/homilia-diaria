@@ -47,7 +47,7 @@ def gerar_homilia(texto_base):
     if "Erro" in texto_base or not texto_base:
         return texto_base
 
-    # Tenta esses nomes em ordem até um funcionar
+    # Lista de nomes de modelos para tentar (ordem de estabilidade)
     modelos_para_testar = ["gemini-1.5-flash", "models/gemini-1.5-flash", "gemini-pro"]
     
     ultima_excecao = ""
@@ -69,11 +69,11 @@ def gerar_homilia(texto_base):
             """
             
             resposta = model.generate_content(prompt)
-            return resposta.text # Se chegou aqui, funcionou!
+            return resposta.text
             
         except Exception as e:
             ultima_excecao = str(e)
-            continue # Tenta o próximo modelo da lista
+            continue
             
     return f"Não foi possível conectar aos modelos do Gemini. Erro: {ultima_excecao}"
 
@@ -88,4 +88,9 @@ st.write("Reflexão original baseada na liturgia do dia.")
 if st.button("Gerar Homilia de Hoje", type="primary"):
     with st.spinner("Meditando sobre as leituras..."):
         conteudo = extrair_texto_nellaparola()
-        resultado = gerar_homilia(conte
+        resultado = gerar_homilia(conteudo)
+        st.subheader("Sua reflexão:")
+        st.write(resultado)
+
+st.divider()
+st.caption("Site: nellaparola.it | IA: Google Gemini")
