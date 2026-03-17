@@ -12,12 +12,14 @@ os.environ["GOOGLE_API_USE_MTLS"] = "never"
 # CONFIGURAÇÕES DE API
 # ==========================================
 if "MINHA_CHAVE" in st.secrets:
-    API_KEY = st.secrets[MINHA_CHAVE = "AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"]
+    API_KEY = st.secrets["MINHA_CHAVE"]
 else:
+    # Se estiver no seu PC, use a linha abaixo. 
+    # Se estiver no GitHub, pode deixar como está, 
+    # pois o "if" acima vai buscar no Secrets do Streamlit.
     API_KEY = "AIzaSyBWqyLvz1XdmOU1opKDzshbactH_-DBgew"
 
 genai.configure(api_key=API_KEY)
-
 # ==========================================
 # FUNÇÕES
 # ==========================================
