@@ -5,11 +5,17 @@ import google.generativeai as genai
 from datetime import date
 
 # ==========================================
-# CONFIGURAÇÕES DA API
+# CONFIGURAÇÕES DE SEGURANÇA (Para Publicação)
 # ==========================================
-# Insira sua API Key do Google AI Studio entre as aspas
-API_KEY = st.secrets["MINHA_CHAVE"]
-genai.configure(api_key=API_KEY, transport="rest")
+# Se estiver rodando no seu PC, ele tenta pegar a chave do código. 
+# Se estiver no Streamlit Cloud, ele pega do "Secrets" (Cofre).
+if "MINHA_CHAVE" in st.secrets:
+    API_KEY = st.secrets["MINHA_CHAVE"]
+else:
+    # Se ainda estiver testando no PC, cole sua chave entre as aspas abaixo:
+    API_KEY = "COLOQUE_SUA_CHAVE_AQUI"
+
+genai.configure(api_key=API_KEY)
 
 # ==========================================
 # FUNÇÕES DO APLICATIVO
@@ -19,97 +25,72 @@ def extrair_texto_nellaparola():
     """Busca o conteúdo do nellaparola.it com a liturgia exata de hoje"""
     hoje = date.today()
     data_formatada = hoje.strftime("%Y-%m-%d")
-    
     url = f"https://www.nellaparola.it/ldg/{data_formatada}"
     
     try:
         headers = {'User-Agent': 'Mozilla/5.0'}
         response = requests.get(url, headers=headers)
-        
         if response.status_code == 404:
-            return f"Erro: A liturgia de hoje ({data_formatada}) ainda não foi publicada no site."
-            
+            return f"Erro: A liturgia de hoje ({data_formatada}) ainda não foi publicada."
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        
         paragrafos = soup.find_all('p') 
         texto_extraido = "\n".join([p.get_text(strip=True) for p in paragrafos if len(p.get_text(strip=True)) > 20])
-        
-        return f"Liturgia da data: {data_formatada}\n\n" + texto_extraido[:3500]
-        
+        return f"Data: {data_formatada}\n\n" + texto_extraido[:3500]
     except Exception as e:
         return f"Erro ao acessar o site: {e}"
 
 def gerar_homilia(texto_base):
-    """Usa o Gemini para ler os comentários e criar uma homilia original"""
-    if "Erro ao acessar" in texto_base or "ainda não foi publicada" in texto_base or not texto_base:
+    """Gera a homilia usando o modelo mais compatível com a API v1beta"""
+    if "Erro" in texto_base or not texto_base:
         return texto_base
 
-    # RADAR DE MODELOS: Busca automaticamente o modelo correto liberado
-    modelo_escolhido = "gemini-pro"
-    try:
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                modelo_escolhido = m.name 
-                break
-    except Exception:
-        pass 
+    # NOME DO MODELO ATUALIZADO PARA EVITAR ERRO 404
+    # Este é o nome oficial para a versão v1beta que você está usando
+    modelo_final = "gemini-1.5-flash-latest"
 
-    model = genai.GenerativeModel(modelo_escolhido)
-    
-    prompt = f"""
-    Você é um sacerdote católico sábio, acolhedor e com o dom da palavra, preparando sua homilia diária.
-    
-    Abaixo estão as leituras bíblicas e os comentários teológicos de apoio para o dia de hoje:
-    
-    [MATERIAL DE ESTUDO]
-    {texto_base}
-    [FIM DO MATERIAL DE ESTUDO]
-    
-    Sua tarefa:
-    Escreva uma homilia diária em português do Brasil, inspirada na essência espiritual do material acima, mas seguindo ESTRITAMENTE as regras e o molde abaixo. O texto deve ter uma fluidez natural, ser profundamente teológico, poético, como uma conversa escrita.
-    
-    REGRAS INEGOCIÁVEIS:
-    1. JAMAIS mencione a fonte das informações (site nellaparola.it, autores italianos, etc.).
-    2. NÃO use frases como "o texto diz", "o comentário aponta" ou "como lemos". A homilia deve parecer uma reflexão 100% original e pessoal.
-    3. Una as ideias do texto de apoio de forma fluida, reescrevendo-as com suas próprias palavras, com originalidade e profundidade teológica.
-    4. Cuidado redobrado com a gramática (ex: se usar a segunda pessoa do singular, conjugue corretamente com o 's' no final, etc). Ao se referir a Deus com os pronomes Ele, Seu, etc. utilize-os em minúsculas caso o nome de Deus ou de Jesus Cristo já tenham sido citados.
-
-    MOLDE DA HOMILIA (Siga esta estrutura rigorosamente):
-    - Introdução: Uma saudação calorosa e a apresentação do tema central da liturgia de forma cativante.
-    - Desenvolvimento: Uma reflexão profunda e natural, trazendo a mensagem para a vida cotidiana e os desafios espirituais da atualidade.
-    - Conclusão: Um convite prático à contemplação ou ação para o dia de hoje, encerrando com uma breve prece.
-    
-    Escreva a homilia agora:
-    """
-    
     try:
+        model = genai.GenerativeModel(modelo_final)
+        
+        prompt = f"""
+        Você é um sacerdote católico sábio e acolhedor.
+        Estude o material teológico abaixo (em italiano):
+        
+        {texto_base}
+        
+        Sua tarefa:
+        Escreva uma homilia em português do Brasil que seja original e profunda.
+        
+        REGRAS:
+        1. NUNCA mencione o site 'nellaparola' ou que está traduzindo algo.
+        2. Escreva como se fosse uma reflexão própria, saída do coração.
+        3. Use um tom de conversa pastoral, com excelente gramática.
+
+        ESTRUTURA:
+        - Uma introdução calorosa apresentando o tema central.
+        - Um desenvolvimento que conecte o Evangelho aos desafios de hoje.
+        - Uma conclusão com um convite à oração ou ação prática.
+        """
+        
         resposta = model.generate_content(prompt)
         return resposta.text
     except Exception as e:
-        return f"Erro ao gerar a homilia com o modelo {modelo_escolhido}: {e}"
+        return f"Erro ao gerar homilia: {e}"
 
 # ==========================================
-# INTERFACE COM STREAMLIT
+# INTERFACE
 # ==========================================
-
 st.set_page_config(page_title="Homilia Diária", page_icon="🕊️")
 
 st.title("🕊️ Homilia Diária")
-st.write("Reflexões diárias geradas de forma original a partir da liturgia do dia.")
-
-st.divider()
+st.write("Reflexões baseadas nos comentários do *nellaparola.it*.")
 
 if st.button("Gerar Homilia de Hoje", type="primary"):
-    with st.spinner("Buscando as leituras e preparando a reflexão..."):
-        texto_site = extrair_texto_nellaparola()
-        
-        if "Erro" in texto_site:
-            st.error(texto_site)
-        else:
-            homilia = gerar_homilia(texto_site)
-            st.subheader("Sua reflexão para hoje:")
-            st.write(homilia)
+    with st.spinner("Preparando a reflexão espiritual..."):
+        conteudo = extrair_texto_nellaparola()
+        resultado = gerar_homilia(conteudo)
+        st.subheader("Sua reflexão para hoje:")
+        st.write(resultado)
 
 st.divider()
-st.caption("Desenvolvido com Python, Streamlit e Google Gemini API.")
+st.caption("Desenvolvido com IA e devoção.")
