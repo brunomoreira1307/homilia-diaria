@@ -16,6 +16,7 @@ else:
 # ==========================================
 
 def extrair_texto_nellaparola():
+    """Busca a página inteira, garantindo a captura dos comentários dos autores"""
     hoje = date.today()
     data_formatada = hoje.strftime("%Y-%m-%d")
     url = f"https://www.nellaparola.it/ldg/{data_formatada}"
@@ -27,14 +28,21 @@ def extrair_texto_nellaparola():
             return f"Liturgia de hoje ({data_formatada}) ainda não disponível no site."
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
-        paragrafos = soup.find_all('p') 
-        texto = "\n".join([p.get_text(strip=True) for p in paragrafos if len(p.get_text(strip=True)) > 20])
-        return f"DATA: {data_formatada}\n\n" + texto[:3500]
+        
+        # 1. Limpeza: Remove menus, rodapés e códigos da página para não confundir a IA
+        for tag in soup(["nav", "footer", "header", "script", "style", "aside"]):
+            tag.decompose()
+            
+        # 2. Captura Total: Pega todo o texto visível (agora inclui as caixas de comentários!)
+        texto_completo = soup.get_text(separator='\n', strip=True)
+        
+        # 3. Sem cortes: Envia a página inteira para a IA, sem limite de caracteres
+        return f"DATA: {data_formatada}\n\n{texto_completo}"
+        
     except Exception as e:
         return f"Erro na extração: {e}"
 
 def descobrir_modelo_liberado(chave):
-    """Pergunta ao Google qual modelo está disponível para esta chave"""
     url_lista = f"https://generativelanguage.googleapis.com/v1beta/models?key={chave}"
     try:
         req = requests.get(url_lista)
@@ -42,22 +50,23 @@ def descobrir_modelo_liberado(chave):
             modelos = req.json().get('models', [])
             for m in modelos:
                 if 'generateContent' in m.get('supportedGenerationMethods', []):
-                    return m['name'] # Ele acha o nome certo sozinho!
+                    return m['name']
     except:
         pass
-    return "models/gemini-pro" # Fallback de segurança
+    return "models/gemini-pro"
 
 def gerar_homilia(texto_base):
     if "Erro" in texto_base or not texto_base:
         return texto_base
 
-    # A IA descobre o nome correto do modelo e cria o link
     nome_do_modelo = descobrir_modelo_liberado(API_KEY)
     url = f"https://generativelanguage.googleapis.com/v1beta/{nome_do_modelo}:generateContent?key={API_KEY}"
     
     prompt = f"""
     Você é um sacerdote católico zeloso. 
-    Estude estes comentários teológicos: {texto_base}
+    Estude estes comentários teológicos (prestando atenção especial aos autores como Luigi Maria Epicoco, Roberto Pasolini e MichaelDavide Semeraro): 
+    
+    {texto_base}
     
     Escreva uma homilia original em português seguindo este molde, a partir dos comentário de Roberto Pasolini, Luigi Maria Epicoco e MichaelDavide Semeraro:
     - INTRODUÇÃO: Saudação e tema central, estritamente ligado ao tema do dia.
@@ -77,7 +86,7 @@ def gerar_homilia(texto_base):
         return dados['candidates'][0]['content']['parts'][0]['text']
     except Exception as e:
         detalhes = response.text if 'response' in locals() else "Sem detalhes"
-        return f"Erro na conexão. \nModelo tentado: {nome_do_modelo}\nDetalhes: {detalhes}"
+        return f"Erro na conexão com a IA.\nDetalhes: {detalhes}"
 
 # ==========================================
 # INTERFACE
@@ -88,7 +97,7 @@ st.title("🕊️ Homilia Diária")
 st.write("Reflexão original baseada na liturgia do dia.")
 
 if st.button("Gerar Homilia de Hoje", type="primary"):
-    with st.spinner("Meditando sobre as leituras..."):
+    with st.spinner("Meditando sobre as leituras e os comentários..."):
         conteudo = extrair_texto_nellaparola()
         resultado = gerar_homilia(conteudo)
         st.subheader("Sua reflexão:")
