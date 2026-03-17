@@ -38,7 +38,7 @@ def gerar_homilia(texto_base):
         return texto_base
 
     # Conexão DIRETA com o Google, sem usar a biblioteca problemática
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
     
     prompt = f"""
     Você é um sacerdote católico zeloso. 
