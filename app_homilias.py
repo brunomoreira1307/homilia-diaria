@@ -33,12 +33,27 @@ def extrair_texto_nellaparola():
     except Exception as e:
         return f"Erro na extração: {e}"
 
+def descobrir_modelo_liberado(chave):
+    """Pergunta ao Google qual modelo está disponível para esta chave"""
+    url_lista = f"https://generativelanguage.googleapis.com/v1beta/models?key={chave}"
+    try:
+        req = requests.get(url_lista)
+        if req.status_code == 200:
+            modelos = req.json().get('models', [])
+            for m in modelos:
+                if 'generateContent' in m.get('supportedGenerationMethods', []):
+                    return m['name'] # Ele acha o nome certo sozinho!
+    except:
+        pass
+    return "models/gemini-pro" # Fallback de segurança
+
 def gerar_homilia(texto_base):
     if "Erro" in texto_base or not texto_base:
         return texto_base
 
-    # Conexão DIRETA com o Google, sem usar a biblioteca problemática
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+    # A IA descobre o nome correto do modelo e cria o link
+    nome_do_modelo = descobrir_modelo_liberado(API_KEY)
+    url = f"https://generativelanguage.googleapis.com/v1beta/{nome_do_modelo}:generateContent?key={API_KEY}"
     
     prompt = f"""
     Você é um sacerdote católico zeloso. 
@@ -53,18 +68,16 @@ def gerar_homilia(texto_base):
     """
 
     headers = {'Content-Type': 'application/json'}
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}]
-    }
+    payload = {"contents": [{"parts": [{"text": prompt}]}]}
     
     try:
         response = requests.post(url, headers=headers, json=payload)
-        response.raise_for_status() # Verifica se deu algum erro de servidor
+        response.raise_for_status() 
         dados = response.json()
         return dados['candidates'][0]['content']['parts'][0]['text']
     except Exception as e:
         detalhes = response.text if 'response' in locals() else "Sem detalhes"
-        return f"Erro na conexão direta com o Google: {e}\nDetalhes: {detalhes}"
+        return f"Erro na conexão. \nModelo tentado: {nome_do_modelo}\nDetalhes: {detalhes}"
 
 # ==========================================
 # INTERFACE
@@ -82,4 +95,4 @@ if st.button("Gerar Homilia de Hoje", type="primary"):
         st.write(resultado)
 
 st.divider()
-st.caption("Site: nellaparola.it | IA: Google Gemini API Direta")
+st.caption("Site: nellaparola.it | IA: Google Gemini API Autônoma")
