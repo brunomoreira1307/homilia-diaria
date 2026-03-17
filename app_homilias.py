@@ -48,7 +48,7 @@ def gerar_homilia(texto_base):
         return texto_base
 
     # Lista de nomes de modelos para tentar (ordem de estabilidade)
-    modelos_para_testar = ["gemini-1.5-flash", "models/gemini-1.5-flash", "gemini-pro"]
+    modelos_para_testar = ["gemini-1.5-flash", "gemini-1.5-pro"]
     
     ultima_excecao = ""
     
